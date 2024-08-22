@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimensionamento de Viga</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .panel {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .panel.active {
+            display: block;
+        }
+        .button {
+            margin-top: 15px;
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .panel-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .panel-container > div {
+            width: 48%;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h1>Dimensionamento de Viga</h1>
+        <div class="input-group">
+            <label for="vao">Vão (m):</label>
+            <input type="number" id="vao" v-model.number="vao" min="0.1" step="0.01">
+        </div>
+        <div class="input-group">
+            <label for="carga">Carga (kN/m):</label>
+            <input type="number" id="carga" v-model.number="carga" min="0" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="carga-axial">Carga Axial (kN):</label>
+            <input type="number" id="carga-axial" v-model.number="cargaAxial" min="0" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="peca">Título da Peça:</label>
+            <select id="peca" v-model="peca">
+                <option v-for="item in pecas" :key="item" :value="item">{{ item }}</option>
+            </select>
+        </div>
+        <button class="button" @click="togglePanel">Mostrar Painéis</button>
+        <div class="panel-container">
+            <div class="panel" :class="{ active: showPanel }">
+                <h3>Parâmetros Kmod</h3>
+                <div class="input-group">
+                    <label for="kmod1">Kmod1 (Nome x Valor):</label>
+                    <select id="kmod1" v-model="kmod1">
+                        <option value="0.6">Permanente - 0,6</option>
+                        <option value="0.7">Longa Duração - 0,7</option>
+                        <option value="0.8">Média Duração - 0,8</option>
+                        <option value="0.9">Curta Duração - 0,9</option>
+                        <option value="1.1">Instantânea - 1,1</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="kmod2">Kmod2 (Nome x Valor):</label>
+                    <select id="kmod2" v-model="kmod2">
+                        <option value="1.0">U 12% - 1,0</option>
+                        <option value="0.95">U 15% - 0,95</option>
+                        <option value="0.93">U 18% - 0,93</option>
+                        <option value="0.9">U >= 25% - 0,9</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel" :class="{ active: showPanel }">
+                <h3>Madeira</h3>
+                <div class="input-group">
+                    <label for="madeira">Tipo de Madeira:</label>
+                    <select id="madeira" v-model="madeira">
+                        <option v-for="item in madeiras" :key="item" :value="item">{{ item }}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="result">
+            <h3>Resultados:</h3>
+            <p><strong>Vão:</strong> {{ vao }} m</p>
+            <p><strong>Carga:</strong> {{ carga }} kN/m</p>
+            <p><strong>Carga Axial:</strong> {{ cargaAxial }} kN</p>
+            <p><strong>Título da Peça:</strong> {{ peca }}</p>
+            <p v-if="showPanel"><strong>Kmod1:</strong> {{ kmod1 }}</p>
+            <p v-if="showPanel"><strong>Kmod2:</strong> {{ kmod2 }}</p>
+            <p v-if="showPanel"><strong>Tipo de Madeira:</strong> {{ madeira }}</p>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                vao: null,
+                carga: null,
+                cargaAxial: null,
+                peca: '5 x 5',
+                kmod1: '0.6',
+                kmod2: '1.0',
+                madeira: 'C30',
+                showPanel: false,
+                pecas: Array.from({ length: 7 }, (_, i) => `5 x ${5 * (i + 1)}`),
+                madeiras: [
+                    'C20', 'C25', 'C30', 'C35', 'C40', 
+                    'C45', 'C50', 'D20', 'D30', 'D40', 
+                    'D50', 'E70', 'F80', 'G100', 'H120'
+                ]
+            },
+            methods: {
+                togglePanel() {
+                    this.showPanel = !this.showPanel;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
